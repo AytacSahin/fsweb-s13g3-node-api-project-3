@@ -39,7 +39,7 @@ function update(id, changes) {
     .where({ id })
     .update(changes)
     .then(rows => {
-      return getById(id);
+      return getById(id[0]);
     });
 }
 

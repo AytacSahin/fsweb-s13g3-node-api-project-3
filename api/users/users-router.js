@@ -1,44 +1,79 @@
 const express = require('express');
+const userModel = require('./users-model');
+const postModel = require('../posts/posts-model');
+const middleware = require("../middleware/middleware");
 
 // `users-model.js` ve `posts-model.js` sayfalarına ihtiyacınız var
 // ara yazılım fonksiyonları da gereklidir
 
 const router = express.Router();
 
-router.get('/', (req, res) => {
-  // TÜM KULLANICILARI İÇEREN DİZİYİ DÖNDÜRÜN
+// 🟢 GET / tüm dataları al:
+router.get('/', async (req, res, next) => {
+  try {
+    res.json(await userModel.get())
+  } catch (error) {
+    next(error)
+  }
 });
 
-router.get('/:id', (req, res) => {
-  // USER NESNESİNİ DÖNDÜRÜN
-  // user id yi getirmek için bir ara yazılım gereklidir
+// 🟢 GET / tüm dataları al:
+router.get('/:id', middleware.validateUserId, (req, res, next) => {
+  try {
+    res.json(req.user)
+  } catch (error) {
+    next(error)
+  }
 });
 
-router.post('/', (req, res) => {
-  // YENİ OLUŞTURULAN USER NESNESİNİ DÖNDÜRÜN
-  // istek gövdesini doğrulamak için ara yazılım gereklidir.
+// 🟢 "POST" ile user ekleme:
+router.post('/', middleware.validateUser, async (req, res, next) => {
+  try {
+    const user = await userModel.insert(req.body)
+    res.status(201).json(user)
+  } catch (error) {
+    next(error)
+  }
 });
 
-router.put('/:id', (req, res) => {
-  // YENİ GÜNCELLENEN USER NESNESİNİ DÖNDÜRÜN
-  // user id yi doğrulayan ara yazılım gereklidir
-  // ve istek gövdesini doğrulayan bir ara yazılım gereklidir.
+// 🟢 "put" ilgili id'deki datayı güncelleme:
+router.put('/:id', middleware.validateUserId, middleware.validateUser, async (req, res, next) => {
+  try {
+    const updatedUser = await userModel.update(req.params.id, req.body);
+    res.status(201).json(updatedUser)
+  } catch (error) {
+    next(error);
+  }
 });
 
-router.delete('/:id', (req, res) => {
-  // SON SİLİNEN USER NESNESİ DÖNDÜRÜN
-  // user id yi doğrulayan bir ara yazılım gereklidir.
+// 🟢 "DELETE" id'ye ait durumu objeden silme:
+router.delete('/:id', middleware.validateUserId, async (req, res, next) => {
+  try {
+    await userModel.remove(req.params.id);
+    res.json(req.user)
+  } catch (error) {
+    next(error)
+  }
 });
 
-router.get('/:id/posts', (req, res) => {
-  // USER POSTLARINI İÇEREN BİR DİZİ DÖNDÜRÜN
-  // user id yi doğrulayan bir ara yazılım gereklidir.
+// 🟢 "GET" id'ye ait post'ları görüntüle:
+router.get('/:id/posts', middleware.validateUserId, async (req, res, next) => {
+  try {
+    const userPosts = await userModel.getUserPosts(req.params.id);
+    res.json(userPosts)
+  } catch (error) {
+    next(error)
+  }
 });
 
-router.post('/:id/posts', (req, res) => {
-  // YENİ OLUŞTURULAN KULLANICI NESNESİNİ DÖNDÜRÜN
-  // user id yi doğrulayan bir ara yazılım gereklidir.
-  // ve istek gövdesini doğrulayan bir ara yazılım gereklidir.
+// 🟢 "POST" id'ye ait post'lara post ekleme:
+router.post('/:id/posts', middleware.validateUserId, middleware.validatePost, async (req, res, next) => {
+  try {
+    const newPost = await postModel.insert({user_id: req.params.id, text:req.body.text})
+    res.status(201).json(newPost)
+  } catch (error) {
+    next(error)
+  }
 });
 
 // routerı dışa aktarmayı unutmayın
