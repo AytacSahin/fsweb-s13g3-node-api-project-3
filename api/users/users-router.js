@@ -42,3 +42,4 @@ router.post('/:id/posts', (req, res) => {
 });
 
 // routerı dışa aktarmayı unutmayın
+module.exports = router;
